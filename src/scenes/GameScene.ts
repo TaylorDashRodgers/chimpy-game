@@ -5,7 +5,7 @@ const PLAYER_SIZE = 60;
 const HALF = PLAYER_SIZE / 2;
 const BOUNDS = 1080;
 
-const BOSS_RADIUS = 40;
+const BOSS_RADIUS = 55;
 const BOSS_SPEED = 80;
 const ARENA_SIZE = 400;
 const ARENA_X = (BOUNDS - ARENA_SIZE) / 2; // 340
@@ -73,16 +73,11 @@ export class GameScene extends Phaser.Scene {
     this.add.rectangle(5, 540, 10, 1080, 0x00ff00);
     this.add.rectangle(1075, 540, 10, 1080, 0x00ff00);
 
-    // White outlined arena bounding box
-    const graphics = this.add.graphics();
-    graphics.lineStyle(2, 0xffffff, 1);
-    graphics.strokeRect(ARENA_X, ARENA_Y, ARENA_SIZE, ARENA_SIZE);
-
     this.player = this.add.sprite(BOUNDS / 2, BOUNDS / 2, 'player')
       .setDisplaySize(PLAYER_SIZE, PLAYER_SIZE);
 
     this.boss = this.add.sprite(BOUNDS / 2, BOUNDS / 2, 'boss')
-      .setDisplaySize(80, 80)
+      .setDisplaySize(110, 110)
       .setVisible(false);
 
     this.levelText = this.add
@@ -192,6 +187,18 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    const invincible = this.time.now - this.sceneStartTime < 5000;
+
+    // Player-boss body collision
+    if (this.boss.visible && !invincible) {
+      const overlapX = Math.abs(this.player.x - this.boss.x) < HALF + BOSS_RADIUS;
+      const overlapY = Math.abs(this.player.y - this.boss.y) < HALF + BOSS_RADIUS;
+      if (overlapX && overlapY) {
+        this.scene.start('GameOverScene', { score: this.level });
+        return;
+      }
+    }
+
     // Player bullet movement, out-of-bounds cleanup, and boss hit detection
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const b = this.bullets[i];
@@ -221,8 +228,6 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
-
-    const invincible = this.time.now - this.sceneStartTime < 5000;
 
     // Initial reveal after spawn delay
     if (!invincible && !this.boss.visible && this.bossDefeatedAt === 0) {
@@ -269,7 +274,7 @@ export class GameScene extends Phaser.Scene {
       const nearY = Phaser.Math.Clamp(b.circle.y, this.player.y - HALF, this.player.y + HALF);
       const distSq = (b.circle.x - nearX) ** 2 + (b.circle.y - nearY) ** 2;
       if (distSq <= BOSS_BULLET_RADIUS * BOSS_BULLET_RADIUS) {
-        this.scene.start('GameOverScene');
+        this.scene.start('GameOverScene', { score: this.level });
         return;
       }
     }
