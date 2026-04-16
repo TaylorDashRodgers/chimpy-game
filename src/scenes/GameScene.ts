@@ -60,10 +60,28 @@ export class GameScene extends Phaser.Scene {
   private bossBullets: Bullet[] = [];
   private lastFiredAt = 0;
   private lastBossFiredAt = 0;
-  private sceneStartTime = 0;
+  private invincible = false;
 
   constructor() {
     super({ key: 'GameScene' });
+  }
+
+  init(): void {
+    // Reset all mutable state so a restart from GameOverScene starts clean.
+    // Bullet circle game objects are already destroyed by Phaser's scene shutdown,
+    // so we only need to clear the arrays.
+    this.bullets = [];
+    this.bossBullets = [];
+    this.bossMaxHp = BOSS_BASE_HP;
+    this.bossHp = BOSS_BASE_HP;
+    this.bossFireInterval = BOSS_BASE_FIRE_INTERVAL;
+    this.bossDefeatedAt = 0;
+    this.level = 1;
+    this.bossVx = BOSS_SPEED;
+    this.bossVy = BOSS_SPEED * 0.6;
+    this.lastFiredAt = 0;
+    this.lastBossFiredAt = 0;
+    this.invincible = false;
   }
 
   preload(): void {
@@ -100,7 +118,8 @@ export class GameScene extends Phaser.Scene {
       this.tryFireBullet(pointer);
     });
 
-    this.sceneStartTime = this.time.now;
+    this.invincible = true;
+    this.time.delayedCall(5000, () => { this.invincible = false; });
     // Sync so the first boss shot fires 800ms after it appears, not instantly
     this.lastBossFiredAt = this.time.now;
   }
@@ -190,10 +209,8 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    const invincible = this.time.now - this.sceneStartTime < 5000;
-
     // Player-boss body collision
-    if (this.boss.visible && !invincible) {
+    if (this.boss.visible && !this.invincible) {
       const overlapX = Math.abs(this.player.x - this.boss.x) < HALF + BOSS_RADIUS;
       const overlapY = Math.abs(this.player.y - this.boss.y) < HALF + BOSS_RADIUS;
       if (overlapX && overlapY) {
@@ -233,7 +250,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Initial reveal after spawn delay
-    if (!invincible && !this.boss.visible && this.bossDefeatedAt === 0) {
+    if (!this.invincible && !this.boss.visible && this.bossDefeatedAt === 0) {
       this.boss.setVisible(true);
       this.lastBossFiredAt = this.time.now;
     }
@@ -244,7 +261,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Boss firing — suppressed during invincibility and while hidden
-    if (this.boss.visible && !invincible &&
+    if (this.boss.visible && !this.invincible &&
         this.time.now - this.lastBossFiredAt >= this.bossFireInterval) {
       this.lastBossFiredAt = this.time.now;
       const angle = Math.random() * Math.PI * 2;
@@ -270,7 +287,7 @@ export class GameScene extends Phaser.Scene {
       }
 
       // Collision detection suppressed during invincibility
-      if (invincible) continue;
+      if (this.invincible) continue;
 
       // Circle-to-rectangle overlap: clamp bullet center to player rect, measure distance
       const nearX = Phaser.Math.Clamp(b.circle.x, this.player.x - HALF, this.player.x + HALF);
