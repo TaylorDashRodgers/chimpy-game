@@ -4,6 +4,9 @@ const SPEED = 180;
 const PLAYER_SIZE = 60;
 const HALF = PLAYER_SIZE / 2;
 const BOUNDS = 1080;
+// Inner edges of the 10px border bars at x=5 and x=1075
+const PLAYER_X_MIN = 10 + HALF;         // 40
+const PLAYER_X_MAX = 1070 - HALF;       // 1040
 
 const BOSS_RADIUS = 55;
 const BOSS_SPEED = 80;
@@ -153,10 +156,10 @@ export class GameScene extends Phaser.Scene {
       this.player.y = Math.min(BOUNDS - HALF, this.player.y + step);
     }
     if (this.keys.a.isDown) {
-      this.player.x = Math.max(HALF, this.player.x - step);
+      this.player.x = Math.max(PLAYER_X_MIN, this.player.x - step);
     }
     if (this.keys.d.isDown) {
-      this.player.x = Math.min(BOUNDS - HALF, this.player.x + step);
+      this.player.x = Math.min(PLAYER_X_MAX, this.player.x + step);
     }
 
     // Boss movement — frozen while hidden
