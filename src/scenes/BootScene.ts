@@ -13,6 +13,8 @@ export class BootScene extends Phaser.Scene {
   private menuTexts: Phaser.GameObjects.Text[] = [];
   private upKey!: Phaser.Input.Keyboard.Key;
   private downKey!: Phaser.Input.Keyboard.Key;
+  private wKey!: Phaser.Input.Keyboard.Key;
+  private sKey!: Phaser.Input.Keyboard.Key;
   private enterKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
@@ -46,6 +48,8 @@ export class BootScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     this.upKey    = kb.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
     this.downKey  = kb.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+    this.wKey     = kb.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+    this.sKey     = kb.addKey(Phaser.Input.Keyboard.KeyCodes.S);
     this.enterKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
     this.updateSelection();
@@ -59,12 +63,12 @@ export class BootScene extends Phaser.Scene {
   }
 
   update(): void {
-    if (Phaser.Input.Keyboard.JustDown(this.upKey)) {
+    if (Phaser.Input.Keyboard.JustDown(this.upKey) || Phaser.Input.Keyboard.JustDown(this.wKey)) {
       this.selectedIndex = (this.selectedIndex - 1 + MENU_ITEMS.length) % MENU_ITEMS.length;
       this.updateSelection();
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.downKey)) {
+    if (Phaser.Input.Keyboard.JustDown(this.downKey) || Phaser.Input.Keyboard.JustDown(this.sKey)) {
       this.selectedIndex = (this.selectedIndex + 1) % MENU_ITEMS.length;
       this.updateSelection();
     }
